@@ -1,0 +1,52 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m src.generate_data
+      - run: python -m src.build_artifacts
+      - run: pytest -q
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy src
+      - name: Verify deterministic artifact
+        run: |
+          sha256sum public/analytics.json > /tmp/first.sha
+          python -m src.build_artifacts
+          sha256sum -c /tmp/first.sha
+
+  frontend-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m src.generate_data
+      - run: python -m src.build_artifacts
+      - run: npm install --no-audit --no-fund
+      - run: npm run test:frontend
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm run test:e2e
+      - run: npm audit --audit-level=high
