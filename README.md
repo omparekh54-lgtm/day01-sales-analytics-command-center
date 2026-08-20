@@ -26,16 +26,37 @@ Strict data-quality gate
         ↓
 Interactive commercial workspace
         ├─ executive KPIs
-        ├─ What Changed? decomposition
+        ├─ What Changed? MoM / YoY decomposition
+        ├─ one-click drilldowns into change drivers
+        ├─ commercial opportunity priority queue
+        ├─ gross-to-profit bridge
         ├─ revenue / profit / margin trends
-        ├─ product economics
+        ├─ interactive monthly tooltips
+        ├─ sortable product economics
         ├─ anomaly detection
         ├─ 3-month revenue forecast
         ├─ evidence-backed recommendations
-        └─ price / discount / cost simulator
+        ├─ price / discount / cost simulator
+        └─ break-even price protection analysis
         ↓
 Print / Save as executive PDF
 ```
+
+## v4 — useful decision features, not dashboard noise
+
+The latest upgrade adds features only where they shorten the path from data to a management decision:
+
+- **MoM / YoY switch:** compare the latest month with either the previous month or the same month last year.
+- **Driver drilldown:** click `Inspect` beside a positive or negative contributor and the entire workspace filters to that exact region, channel, segment, category, or product.
+- **Opportunity queue:** ranks material discount leakage and margin gaps instead of showing every possible slice.
+- **Peer-benchmark discount sensitivity:** estimates gross-to-net value if an above-peer discount rate were brought back to the peer median, while explicitly holding volume and price constant.
+- **Gross-to-profit bridge:** separates gross sales, discount spend, net revenue, cost and gross profit so pricing leakage is not confused with cost pressure.
+- **Break-even pricing:** the scenario simulator now calculates the price move required to preserve current gross profit after selected discount or cost changes.
+- **Quick scenario presets:** common pricing, discount and supplier-cost tests can be loaded instantly, then adjusted manually.
+- **Sortable product economics:** rank products by revenue, profit, margin, discount rate or units and inspect a product directly.
+- **Drag-and-drop ingestion:** CSV and Excel files can be dropped directly on the landing panel.
+- **Interactive trend chart:** hover or keyboard-focus a month to see exact revenue/profit/margin context.
+- **Restrained motion:** entry, chart-draw and bar animations improve hierarchy and feedback without turning the dashboard into a demo reel. `prefers-reduced-motion` is respected.
 
 ## Why this is useful
 
@@ -44,12 +65,15 @@ Many small and mid-sized businesses already have transaction data in Excel but d
 It helps answer questions such as:
 
 - What changed this month, and what actually drove the change?
+- Is the movement temporary month-over-month noise or a year-over-year shift?
+- Which product, channel, segment, category or region should I inspect first?
 - Which products generate revenue but weak gross profit?
-- Which region, channel, category, or customer segment is leaking margin?
-- How much value is being given away through discounting?
+- Where is discounting materially above comparable peers?
+- Is the problem pricing leakage or the underlying cost base?
 - Are any months statistically unusual?
 - What does the next quarter look like directionally?
 - What happens to profit if price, discount, or cost changes?
+- How much pricing action would be required just to preserve current profit after a cost shock?
 
 ## Bring-your-own-data ingestion
 
@@ -118,196 +142,77 @@ Checks include:
 - positive quantity
 - cost / gross-profit availability
 - discount bounds
-- exact duplicate rows
+- duplicate source rows / IDs where available
+- financial identity consistency
 
-The user sees source rows, valid rows, rejected rows, duplicate count, quality score, mapping warnings, an issue preview, and a downloadable issues CSV.
+The user can continue with valid rows and download a CSV of rejected rows/issues.
 
-## What Changed?
+## Analytical safeguards
 
-The executive brief compares the latest available month with the previous month and decomposes the movement across:
+- Gross profit is explicitly `net revenue - cost`.
+- Discount opportunity is shown as a **sensitivity**, not guaranteed recovered profit.
+- Scenario simulation holds unit volume constant and says so visibly.
+- Break-even price analysis protects baseline gross profit under the selected assumptions; it does not estimate demand elasticity.
+- Anomalies are investigation flags, not causal explanations.
+- Forecasts expose method and backtested error instead of presenting a single point estimate as certainty.
 
-- region
-- channel
-- customer segment
-- category
-- product
+## Testing
 
-It reports revenue delta, revenue growth, gross-profit delta, gross-profit growth, margin change in percentage points, and the largest positive and negative contributors.
+The project includes Python analytics tests and browser-side TypeScript tests covering ingestion, validation, filtering, KPI economics, forecasting, scenarios, recommendations and the v4 decision layer.
 
-## Core economics
+The v4 decision tests verify:
 
-For every filter selection Signal recomputes:
-
-- net revenue
-- gross revenue
-- cost
-- gross profit
-- gross margin
-- discount amount
-- weighted discount rate
-- orders
-- units
-- average order value
-- average selling price
-
-```text
-gross profit = net revenue - cost
-gross margin = gross profit / net revenue
-weighted discount rate = total discount / total gross revenue
-AOV = net revenue / unique orders
-ASP = net revenue / units
-```
-
-## Interactive drilldowns
-
-The workspace supports filters for date range, region, channel, customer segment, category, and product. KPI cards, trend charts, product economics, change decomposition, forecast inputs, recommendations, and scenario baselines respond to the selected facts.
-
-## Anomaly detection
-
-Monthly revenue anomalies use a median-absolute-deviation robust z-score:
-
-```text
-robust_z = 0.6745 × (x - median) / MAD
-```
-
-A month is flagged when `|z| >= 3.0`. A flag means **investigate**, not **cause proven**.
-
-## Revenue forecasting
-
-The live product includes a transparent 3-month forecast:
-
-- minimum 6 months of history
-- linear trend for shorter histories
-- shrunk month-of-year seasonality when 18+ months are available
-- residual-error forecast range
-- expanding-window one-step MAPE where enough history exists
-
-The UI explicitly presents the output as directional planning evidence rather than a guaranteed target.
-
-## Scenario simulator
-
-Users can vary:
-
-- price %
-- discount rate in percentage points
-- cost %
-
-Signal estimates projected revenue, gross profit, gross margin, and the change versus baseline. Unit volume is intentionally held constant, and the interface states that assumption so sensitivity analysis is not confused with demand-elasticity modelling.
-
-## Evidence-backed recommendations
-
-Recommendations for uploaded data are recomputed from the user's transaction facts. Rules identify issues such as revenue-leading products with weak margins, discount leakage, and structural margin gaps across commercial dimensions.
-
-Every recommendation follows:
-
-**observation → evidence → implication → action**
-
-## Executive report
-
-**Export executive PDF** uses a print-specific layout so the currently filtered management view can be printed or saved as a PDF directly from the browser.
-
-## Technology
-
-- Next.js 16
-- React 19
-- TypeScript
-- SheetJS / `xlsx` for browser-side Excel ingestion
-- Python + pandas / NumPy / SciPy for the deterministic analytics reference pipeline
-- pytest, Node test runner, ESLint, Prettier, Ruff and mypy
-- GitHub Actions quality workflow
-- Vercel production deployment
+- month-over-month and year-over-year comparison logic
+- quantified above-peer discount sensitivity
+- gross-to-profit bridge reconciliation
+- break-even price behavior under cost shocks
 
 ## Architecture
 
 ```text
-                 REAL USER PATH
-CSV / Excel
-    ↓
-browser parser
-    ↓
-column mapper
-    ↓
-validation + rejected-row report
-    ↓
-canonical transaction facts
-    ↓
-┌──────────────────────────────────────────┐
-│ KPI engine                               │
-│ change decomposition                     │
-│ product / segment drilldowns             │
-│ robust anomaly detection                 │
-│ transparent forecasting                  │
-│ dynamic recommendations                  │
-│ scenario sensitivity                     │
-└──────────────────────────────────────────┘
-    ↓
-interactive decision UI + executive PDF
-
-          REFERENCE / PORTFOLIO PIPELINE
-Python deterministic generator
-    ↓
-strict validation
-    ↓
-analytics + recommendations
-    ↓
-reproducible artifact + automated tests
+Real CSV / Excel                      Deterministic demo
+       │                                     │
+       └────────────── browser ──────────────┘
+                         │
+                 column mapping
+                         │
+                 validation gate
+                         │
+                 normalized facts
+                         │
+         ┌───────────────┼────────────────┐
+         │               │                │
+     KPI engine      decision layer    forecasting
+                         │
+        change attribution / opportunities /
+        break-even / recommendations / anomalies
+                         │
+                         ▼
+                Next.js decision UI
 ```
-
-## Quality gates
-
-Verified during the v3 upgrade:
-
-- **24/24 Python tests passed**
-- **11/11 frontend/intelligence/import tests passed**
-- Vercel cloud build: **Next.js compiled successfully**
-- Vercel cloud build: **TypeScript passed**
-- production landing page: **HTTP 200**
-
-The test suite covers validation rules, KPI math, deterministic artifacts, filtering, column inference, uploaded-row normalization, latest-month change decomposition, forecasts, scenario sensitivity, and evidence-backed recommendations.
 
 ## Local development
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python -m src.generate_data
-python -m src.build_artifacts
-pytest -q
-
 npm install
 npm run test:frontend
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+For the deterministic Python analytics pipeline:
 
-## Important limitations
-
-- Uploaded analysis is intentionally browser-local and is not persisted between devices or browser sessions.
-- The scenario simulator does not estimate demand elasticity; it holds unit volume constant.
-- The forecast is deliberately transparent and lightweight, not a guaranteed target.
-- Gross profit is not EBITDA or contribution margin unless the uploaded cost field represents all relevant variable costs.
-- Anomaly detection flags unusual movement but does not prove causality.
-- Currency selection identifies the currency unit of uploaded values; it does not perform FX conversion.
-
-## Repository structure
-
-```text
-app/                    Next.js application and product styling
-components/             upload, mapping, quality and decision-workspace UI
-lib/importer.ts         CSV / Excel mapping and normalization
-lib/intelligence.ts     change, anomaly, forecast, scenario and recommendation logic
-lib/sample.ts           deterministic in-browser demo company
-lib/view.ts             filtering and KPI re-aggregation
-src/                    deterministic Python analytics reference pipeline
-tests/                  Python and TypeScript test suites
-.github/workflows/      CI quality gate
+```bash
+pip install -r requirements.txt
+python -m src.generate_data
+python -m src.build_artifacts
+pytest -q
 ```
 
 ## Product direction
 
-The next meaningful product steps would be saved analyses/accounts, shareable read-only report links, customer/cohort retention, returns/refunds, contribution-margin layers, hierarchical anomaly attribution, and calibrated forecasting/elasticity models once real longitudinal datasets are available.
+Day 1 is intentionally staying focused on one job: **turn a sales export into useful commercial decisions**. Features such as chat, CRM, authentication, collaboration, notifications and unrelated BI widgets are not being added just to make the app look larger.
+
+Future additions should only be accepted if they improve ingestion quality, analytical trust, decision speed, repeatability, or measurable business usefulness.
 
 ## License
 
