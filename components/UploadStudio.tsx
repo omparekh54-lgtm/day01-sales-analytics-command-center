@@ -24,6 +24,7 @@ export function UploadStudio({ onDataset, onSample, sampleLoading }: Props) {
   const [parsed, setParsed] = useState<ParsedFile | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function receive(file: File) {
@@ -37,6 +38,7 @@ export function UploadStudio({ onDataset, onSample, sampleLoading }: Props) {
       setError(reason instanceof Error ? reason.message : 'Unable to read the file.');
     } finally {
       setBusy(false);
+      setDragging(false);
     }
   }
 
@@ -54,7 +56,7 @@ export function UploadStudio({ onDataset, onSample, sampleLoading }: Props) {
     <main className="upload-page">
       <nav className="upload-nav"><a className="brand" href="#"><span className="brand-mark">S</span><span>Signal / Sales Intelligence</span></a><span>Day 01 · 100 Days of Data Science</span></nav>
       <section className="upload-hero">
-        <div>
+        <div className={`upload-drop-zone ${dragging ? 'upload-drop-zone--active' : ''}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); const file = event.dataTransfer.files?.[0]; if (file) void receive(file); }}>
           <p className="eyebrow">Bring your own data</p>
           <h1>Turn a sales file into<br /><span>management intelligence.</span></h1>
           <p>Upload CSV or Excel. Signal maps your columns, rejects bad rows, computes commercial economics, explains what changed, forecasts revenue, simulates decisions, and produces an executive-ready report.</p>
@@ -63,6 +65,8 @@ export function UploadStudio({ onDataset, onSample, sampleLoading }: Props) {
             <button className="button button--ghost button--large" onClick={onSample} disabled={sampleLoading}>{sampleLoading ? 'Loading sample…' : 'Try sample company'}</button>
             <button className="text-button" onClick={() => download('signal-sales-template.csv', templateCsv(), 'text/csv')}>Download CSV template ↓</button>
           </div>
+          <div className="upload-hint"><span>or drag & drop a file anywhere in this panel</span><small>CSV · XLSX · XLS · processed locally in your browser</small></div>
+          {dragging && <div className="drop-overlay" aria-hidden="true"><strong>Drop the sales file here</strong><span>We’ll map and validate it before analysis.</span></div>}
           <input ref={inputRef} hidden type="file" accept=".csv,.xlsx,.xls,text/csv" onChange={(event) => { const file = event.target.files?.[0]; if (file) void receive(file); }} />
         </div>
         <aside className="privacy-card"><div className="privacy-icon">✓</div><strong>Private by design</strong><p>Your workbook is processed locally in the browser. The file is not uploaded to an application database.</p><ul><li>CSV / XLSX / XLS</li><li>Automatic column suggestions</li><li>Bad-row rejection report</li><li>No account required</li></ul></aside>
