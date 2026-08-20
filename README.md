@@ -1,239 +1,271 @@
-# Day 01 — Sales Analytics Command Center
+# Day 01 — Signal Sales Intelligence Command Center
 
-A portfolio-grade commercial analytics product for identifying profitable growth, margin leakage, product economics, concentration risk, and statistically unusual performance. It is the first project in the **100 Days of Data Science** portfolio.
+**100 Days of Data Science · Day 01**
 
-> This is not a notebook dashboard. The Python analytics layer owns validation and business calculations, produces a deterministic production artifact, and a typed Next.js interface turns those facts into an executive decision workflow.
+Signal is a bring-your-own-data sales intelligence product. Instead of opening on a fixed synthetic dashboard, a user can upload a real CSV or Excel sales export, map their own columns, pass a visible data-quality gate, investigate business performance, forecast revenue, simulate commercial decisions, and export an executive report.
 
-## Project summary
+> Synthetic data is now only a one-click demo. The primary product workflow is built around the user's own business data.
 
-Leadership teams often see revenue without enough context about the quality of that revenue. This application connects revenue, profit, realized margin, discounting, product mix, channel economics, customer segments, growth, Pareto concentration, and anomalies in one reproducible system.
+## Live product
 
-The current deterministic dataset contains **12,000 transaction lines** covering **2024-01-01 through 2025-12-31**. The production artifact contains a source hash, validation status, build identity, analytical outputs, recommendations, methodology, and the derived transaction facts required for interactive filtering.
+**Production:** https://day01-sales-intelligence-v3.vercel.app  
+**Repository:** https://github.com/omparekh54-lgtm/day01-sales-analytics-command-center
 
-## Business problem
-
-The command center is designed to answer:
-
-- Where are revenue and gross profit growing?
-- Where is growth becoming less profitable?
-- Which products create revenue but weak economic value?
-- Where is discounting eroding margin?
-- Which regions, channels, segments, and categories are structurally weaker?
-- How concentrated is revenue?
-- Which products are declining or growing with margin pressure?
-- Are monthly revenue, profit, or margin movements statistically unusual?
-- What evidence should management investigate next?
-
-## Why this matters
-
-Revenue-only reporting can reward the wrong commercial behavior. A channel can grow while giving away too much price, a high-revenue product can produce weak contribution economics, and a large customer segment can look attractive until discount leakage is included. This project makes those trade-offs explicit and testable.
-
-## Key features
-
-- Deterministic synthetic transaction generator with documented relationships and noise
-- Strict schema and business-rule validation that fails loudly
-- Reproducible `python -m src.build_artifacts` production pipeline
-- Revenue, gross revenue, net revenue, units, orders, AOV, ASP, cost, gross profit, margin, discount amount/rate
-- MoM and YoY revenue/profit growth, margin change, 3-month rolling averages, growth acceleration
-- Profitability analysis across product, category, region, channel, segment, and selected two-dimensional combinations
-- Discount leakage and realized margin analysis
-- Product Pareto and category concentration analysis
-- Product growth/economics profiles
-- Robust monthly anomaly detection using MAD-based robust z-scores with a zero-MAD fallback
-- Descriptive seasonality by month, category, and channel
-- Evidence-based recommendations generated in Python
-- Responsive Next.js/React/TypeScript product interface
-- Date, region, channel, segment, category, and product filters
-- Previous-period KPI comparisons
-- Trend metric switching
-- Loading, error, invalid/empty-filter and reset states
-- Real pipeline-health display derived from artifact metadata
-- Keyboard-visible focus states, semantic labels, chart titles/tooltips, reduced-motion support
-- Python and frontend unit tests plus an HTTP production smoke test
-- GitHub Actions quality workflow
-
-## Architecture
+## What a user can actually do
 
 ```text
-Deterministic generator
-       │
-       ▼
-data/sales.csv
-       │
-       ▼
-Strict validation ──X──> clear failure on bad data
-       │
-       ▼
-Feature enrichment
-       │
-       ├── KPI / growth engine
-       ├── profitability / combinations
-       ├── discount intelligence
-       ├── Pareto concentration
-       ├── product economics
-       ├── anomaly detection
-       ├── seasonality
-       └── evidence-based recommendations
-       │
-       ▼
-public/analytics.json
-       │
-       ▼
-Next.js + React + TypeScript decision UI
+Upload CSV / XLSX / XLS
+        ↓
+Automatic column suggestions
+        ↓
+Review / correct field mapping
+        ↓
+Strict data-quality gate
+        ├─ valid rows → analysis
+        └─ bad rows → downloadable issues CSV
+        ↓
+Interactive commercial workspace
+        ├─ executive KPIs
+        ├─ What Changed? decomposition
+        ├─ revenue / profit / margin trends
+        ├─ product economics
+        ├─ anomaly detection
+        ├─ 3-month revenue forecast
+        ├─ evidence-backed recommendations
+        └─ price / discount / cost simulator
+        ↓
+Print / Save as executive PDF
 ```
 
-The frontend **does not invent source economics**. It filters and re-aggregates already-derived transaction facts such as gross revenue, discount amount, net revenue, cost, gross profit, and gross margin. Global statistical outputs and recommendations are generated by Python.
+## Why this is useful
 
-## Data source
+Many small and mid-sized businesses already have transaction data in Excel but do not have a governed analytics stack. Signal is designed to sit between a raw export and a management decision.
 
-An appropriate public dataset with all required commercial dimensions and controlled historical depth was not used for Day 1. Instead, the project uses a purpose-built synthetic dataset so the complete pipeline can demonstrate realistic commercial relationships without pretending a toy public table supports dimensions it does not contain.
+It helps answer questions such as:
 
-### Synthetic data methodology
+- What changed this month, and what actually drove the change?
+- Which products generate revenue but weak gross profit?
+- Which region, channel, category, or customer segment is leaking margin?
+- How much value is being given away through discounting?
+- Are any months statistically unusual?
+- What does the next quarter look like directionally?
+- What happens to profit if price, discount, or cost changes?
 
-Generation uses the fixed seed **20260820**. The generator models:
+## Bring-your-own-data ingestion
 
-- product-specific base demand and price levels
-- product demand trends rather than one global winner
-- shared and category-specific seasonality
-- regional, channel, and segment demand multipliers
-- pricing variation and transaction noise
-- channel/segment discount behavior plus stochastic variation
-- region/channel/segment cost effects
-- cost inflation through time
-- rare stochastic demand shocks
+Supported files:
 
-Noise is deliberately retained. The generator does not hardcode analytical conclusions or force a single predetermined winner.
+- `.csv`
+- `.xlsx`
+- `.xls`
 
-## Data dictionary
+Column names do **not** need to match a fixed schema. Signal recognizes common headings such as:
 
-| Field | Meaning |
+| Source heading | Signal field |
 |---|---|
-| `transaction_id` | Unique line-level transaction identifier |
-| `order_id` | Order identifier used for order count and AOV |
-| `order_date` | Transaction date |
-| `region` | Commercial region |
-| `channel` | Online, Retail, or Distributor |
-| `customer_segment` | Consumer, SMB, Mid-Market, or Enterprise |
-| `category` | Product category |
-| `product` | Product name |
-| `quantity` | Units on the transaction line |
-| `list_price` | Pre-discount unit price |
-| `unit_cost` | Unit cost |
-| `discount_rate` | Transaction discount in decimal form |
+| `Invoice Date` | Order date |
+| `Invoice No` | Order / invoice ID |
+| `SKU Name` | Product |
+| `Sales Value` | Net revenue |
+| `COGS` | Cost |
+| `Discount %` | Discount rate |
 
-Derived metrics are documented in `data/README.md` and produced by `src/features.py`.
+The user reviews the suggested mapping before analysis. The application does not silently invent business fields.
 
-## Data-quality methodology
+### Minimum useful fields
 
-Validation rejects rather than silently repairs critical bad input. Checks include:
+Required:
 
-- exact required/unexpected columns
-- null values
-- duplicate transaction IDs
-- malformed transaction/order IDs
-- unparseable dates
-- dates outside the supported historical range
-- invalid numeric types
-- zero/negative quantities
-- non-positive prices or costs
-- discounts outside `[0, 1]`
-- invalid derived revenue/cost relationships
-- empty datasets
+- order / invoice date
+- product / SKU
+- net revenue / sales
+- either cost / COGS **or** gross profit
 
-The production artifact records each passed check, row/column counts, source SHA-256, deterministic build ID, random seed, schema version, and validation status.
+Recommended:
 
-## Analytical methodology
+- invoice / order ID
+- quantity
+- category
+- region
+- channel
+- customer segment
+- discount rate or discount amount
 
-### Core economics
+Missing optional dimensions remain explicit as `Unspecified` rather than being fabricated.
 
-- `gross_revenue = quantity × list_price`
-- `discount_amount = gross_revenue × discount_rate`
-- `net_revenue = gross_revenue - discount_amount`
-- `cost = quantity × unit_cost`
-- `gross_profit = net_revenue - cost`
-- `gross_margin = gross_profit / net_revenue`
+## Privacy model
 
-AOV is calculated on unique `order_id`, not transaction lines.
+Uploaded files are processed **inside the browser**. The workbook is not uploaded to an application database.
 
-### Growth
+For Day 1 this means:
 
-Monthly performance includes MoM revenue/profit growth, YoY revenue/profit growth, margin change in percentage points, 3-month rolling revenue/profit, and growth acceleration/deceleration.
+- no account required
+- no server-side persistence of customer rows
+- no upload bucket
+- no hidden API containing the user's sales data
 
-### Discount intelligence
+The **Try sample company** button builds a deterministic demo dataset directly in the browser, so demo mode also has no external data-file dependency.
 
-Discount impact is quantified through gross-to-net revenue loss, weighted realized discount rate, pre-discount margin, post-discount margin, and commercial slices with elevated discounting.
+## Data-quality gate
 
-### Pareto concentration
+Signal rejects invalid rows and tells the user why instead of silently repairing critical problems.
 
-Entities are ranked by net revenue and cumulative contribution is calculated. The engine reports the number/share of entities required to cross 80% of revenue plus top-three concentration.
+Checks include:
 
-### Anomaly detection
+- required mapping
+- date parsing
+- non-negative revenue
+- positive quantity
+- cost / gross-profit availability
+- discount bounds
+- exact duplicate rows
 
-For monthly revenue, profit, and margin, the engine computes a robust z-score using the median and MAD:
+The user sees source rows, valid rows, rejected rows, duplicate count, quality score, mapping warnings, an issue preview, and a downloadable issues CSV.
+
+## What Changed?
+
+The executive brief compares the latest available month with the previous month and decomposes the movement across:
+
+- region
+- channel
+- customer segment
+- category
+- product
+
+It reports revenue delta, revenue growth, gross-profit delta, gross-profit growth, margin change in percentage points, and the largest positive and negative contributors.
+
+## Core economics
+
+For every filter selection Signal recomputes:
+
+- net revenue
+- gross revenue
+- cost
+- gross profit
+- gross margin
+- discount amount
+- weighted discount rate
+- orders
+- units
+- average order value
+- average selling price
+
+```text
+gross profit = net revenue - cost
+gross margin = gross profit / net revenue
+weighted discount rate = total discount / total gross revenue
+AOV = net revenue / unique orders
+ASP = net revenue / units
+```
+
+## Interactive drilldowns
+
+The workspace supports filters for date range, region, channel, customer segment, category, and product. KPI cards, trend charts, product economics, change decomposition, forecast inputs, recommendations, and scenario baselines respond to the selected facts.
+
+## Anomaly detection
+
+Monthly revenue anomalies use a median-absolute-deviation robust z-score:
 
 ```text
 robust_z = 0.6745 × (x - median) / MAD
 ```
 
-A month is flagged when `|z| >= 3.0`. If MAD is exactly zero, the implementation falls back to a median-centered standard-deviation z-score rather than declaring every non-median value anomalous. High values are not automatically labelled anomalies.
+A month is flagged when `|z| >= 3.0`. A flag means **investigate**, not **cause proven**.
 
-### Seasonality
+## Revenue forecasting
 
-Month-of-year, category-month, and channel-month summaries are descriptive. They are not presented as causal evidence.
+The live product includes a transparent 3-month forecast:
 
-## Main measured results
+- minimum 6 months of history
+- linear trend for shorter histories
+- shrunk month-of-year seasonality when 18+ months are available
+- residual-error forecast range
+- expanding-window one-step MAPE where enough history exists
 
-Results below come from the deterministic generated dataset and current `public/analytics.json` artifact.
+The UI explicitly presents the output as directional planning evidence rather than a guaranteed target.
 
-| Metric | Result |
-|---|---:|
-| Net revenue | **$3,819,317** |
-| Gross revenue | **$4,388,224** |
-| Gross profit | **$1,126,725** |
-| Gross margin | **29.5%** |
-| Discount amount | **$568,907** |
-| Weighted discount rate | **13.0%** |
-| Orders | **10,036** |
-| Units | **32,262** |
-| Average order value | **$380.56** |
-| Average selling price | **$118.38** |
+## Scenario simulator
 
-### Business insights
+Users can vary:
 
-1. **Office is revenue-heavy but economically weak.** It contributes **32.6% of revenue** but only **24.4% of gross profit**, with a realized margin of **22.1%**.
-2. **Slate Standing Desk is the clearest revenue-vs-value tension.** It generates **$530,413** of revenue, the highest product total, but only **16.1% margin** and **$85,422** gross profit.
-3. **Distributor discounting is materially more aggressive.** Its realized discount rate is **17.2%**, versus **11.0%** for Retail, while Distributor margin is only **21.8%**.
-4. **Enterprise discount pressure is high.** Enterprise generates **$976,785** revenue at a **16.8%** realized discount rate and **26.7%** margin.
-5. **East is the weakest regional margin.** East records **27.8%** margin on **$719,822** of revenue, roughly **3.5 percentage points** below South.
-6. **Revenue is concentrated, but not a textbook 80/20 distribution.** The top three products contribute **39.8%** of revenue and **8 of 12 products** are required to cross 80% cumulative revenue.
-7. **December 2025 is a statistically unusual high-revenue month.** Revenue reaches **$206,110** with a robust z-score of **3.11**, crossing the documented **3.0** threshold. This is an anomaly flag for investigation, not a causal claim.
-8. **Several revenue leaders are growing with margin pressure.** Slate Standing Desk, Orbit Chair, Pulse ANC Headset, Vector Desk Hub, and Loft Air Purifier all have positive recent revenue growth while recent realized margin is lower.
+- price %
+- discount rate in percentage points
+- cost %
 
-## Recommendations generated by the system
+Signal estimates projected revenue, gross profit, gross margin, and the change versus baseline. Unit volume is intentionally held constant, and the interface states that assumption so sensitivity analysis is not confused with demand-elasticity modelling.
 
-The artifact automatically produces recommendation objects containing **observation → evidence → implication → action**. Examples include investigating pricing/discount/cost drivers for Slate Standing Desk, adding approval bands around Distributor discounting, decomposing East's margin gap by category/channel, and applying contribution-margin-based guardrails to Enterprise concessions.
+## Evidence-backed recommendations
 
-These statements are generated from computed metrics; the UI does not hardcode them.
+Recommendations for uploaded data are recomputed from the user's transaction facts. Rules identify issues such as revenue-leading products with weak margins, discount leakage, and structural margin gaps across commercial dimensions.
 
-## User experience
+Every recommendation follows:
 
-The dashboard is structured around a leadership workflow:
+**observation → evidence → implication → action**
 
-1. Select the decision lens with consistent filters.
-2. Read current economics and prior-period movement.
-3. Inspect revenue/profit/margin trajectory.
-4. Check statistically flagged months.
-5. Compare product revenue against realized margin.
-6. Read scoped, evidence-backed actions.
-7. Inspect lineage, validation checks, source hash, and methodology.
+## Executive report
 
-## Screenshots
+**Export executive PDF** uses a print-specific layout so the currently filtered management view can be printed or saved as a PDF directly from the browser.
 
-Screenshots must come from the real running application and are intentionally not fabricated. Production screenshots should be captured after a verified deployment and stored in `docs/screenshots/` before the repository is considered fully publication-ready.
+## Technology
 
-## Local installation
+- Next.js 16
+- React 19
+- TypeScript
+- SheetJS / `xlsx` for browser-side Excel ingestion
+- Python + pandas / NumPy / SciPy for the deterministic analytics reference pipeline
+- pytest, Node test runner, ESLint, Prettier, Ruff and mypy
+- GitHub Actions quality workflow
+- Vercel production deployment
 
-### Python pipeline
+## Architecture
+
+```text
+                 REAL USER PATH
+CSV / Excel
+    ↓
+browser parser
+    ↓
+column mapper
+    ↓
+validation + rejected-row report
+    ↓
+canonical transaction facts
+    ↓
+┌──────────────────────────────────────────┐
+│ KPI engine                               │
+│ change decomposition                     │
+│ product / segment drilldowns             │
+│ robust anomaly detection                 │
+│ transparent forecasting                  │
+│ dynamic recommendations                  │
+│ scenario sensitivity                     │
+└──────────────────────────────────────────┘
+    ↓
+interactive decision UI + executive PDF
+
+          REFERENCE / PORTFOLIO PIPELINE
+Python deterministic generator
+    ↓
+strict validation
+    ↓
+analytics + recommendations
+    ↓
+reproducible artifact + automated tests
+```
+
+## Quality gates
+
+Verified during the v3 upgrade:
+
+- **24/24 Python tests passed**
+- **11/11 frontend/intelligence/import tests passed**
+- Vercel cloud build: **Next.js compiled successfully**
+- Vercel cloud build: **TypeScript passed**
+- production landing page: **HTTP 200**
+
+The test suite covers validation rules, KPI math, deterministic artifacts, filtering, column inference, uploaded-row normalization, latest-month change decomposition, forecasts, scenario sensitivity, and evidence-backed recommendations.
+
+## Local development
 
 ```bash
 python -m venv .venv
@@ -242,127 +274,40 @@ pip install -r requirements.txt
 python -m src.generate_data
 python -m src.build_artifacts
 pytest -q
-```
 
-### Web application
-
-```bash
 npm install
+npm run test:frontend
 npm run dev
 ```
 
 Open `http://localhost:3000`.
 
-## Reproducible pipeline
+## Important limitations
 
-```bash
-python -m src.generate_data
-python -m src.build_artifacts
-```
-
-The second command validates the input and writes `public/analytics.json`. Re-running generation with the fixed configuration produces the same source data and deterministic artifact identity.
-
-## Testing
-
-Python tests cover validation failures, KPI calculations, growth, discounts, Pareto concentration, anomaly detection, deterministic data generation, artifact schema/metadata, and byte-identical rebuilds.
-
-Frontend unit tests cover default filters, filter consistency, KPI aggregation inputs, monthly/product aggregation, and unavailable comparison periods. The E2E smoke test starts the production Next.js server and verifies both the homepage and analytics artifact return successful responses with valid metadata.
-
-```bash
-pytest -q
-npm run test:frontend
-npm run lint
-npm run format:check
-npm run build
-npm run test:e2e
-npm audit --audit-level=high
-```
-
-## CI/CD
-
-`.github/workflows/quality.yml` runs:
-
-- deterministic data generation and artifact build
-- Python tests
-- Ruff lint and format checks
-- mypy
-- artifact reproducibility hash comparison
-- frontend unit tests
-- ESLint
-- Prettier check
-- Next.js production build
-- E2E smoke test
-- npm high-severity audit
-
-CI is not configured to skip failed quality gates.
-
-## Security
-
-- No API keys or credentials are required by the application.
-- `.env.example` is provided for configuration convention.
-- `.gitignore` excludes local environments, caches, build output, and secrets.
-- The frontend consumes a static validated analytics artifact and exposes no write endpoint.
-- CI includes an npm high-severity dependency audit.
+- Uploaded analysis is intentionally browser-local and is not persisted between devices or browser sessions.
+- The scenario simulator does not estimate demand elasticity; it holds unit volume constant.
+- The forecast is deliberately transparent and lightweight, not a guaranteed target.
+- Gross profit is not EBITDA or contribution margin unless the uploaded cost field represents all relevant variable costs.
+- Anomaly detection flags unusual movement but does not prove causality.
+- Currency selection identifies the currency unit of uploaded values; it does not perform FX conversion.
 
 ## Repository structure
 
 ```text
-.
-├── .github/workflows/quality.yml
-├── app/
-├── components/
-├── data/
-│   ├── README.md
-│   └── sales.csv
-├── docs/screenshots/
-├── lib/
-├── public/
-│   └── analytics.json
-├── src/
-│   ├── analytics.py
-│   ├── build_artifacts.py
-│   ├── config.py
-│   ├── features.py
-│   ├── generate_data.py
-│   ├── insights.py
-│   └── validation.py
-├── tests/
-├── README.md
-├── LICENSE
-├── pyproject.toml
-├── requirements.txt
-├── package.json
-└── tsconfig.json
+app/                    Next.js application and product styling
+components/             upload, mapping, quality and decision-workspace UI
+lib/importer.ts         CSV / Excel mapping and normalization
+lib/intelligence.ts     change, anomaly, forecast, scenario and recommendation logic
+lib/sample.ts           deterministic in-browser demo company
+lib/view.ts             filtering and KPI re-aggregation
+src/                    deterministic Python analytics reference pipeline
+tests/                  Python and TypeScript test suites
+.github/workflows/      CI quality gate
 ```
 
-## Deployment
+## Product direction
 
-The project is designed for Vercel: Python is used at development/build-artifact time, while production serves a Next.js application plus the static validated JSON artifact. No Python runtime is required for normal dashboard requests.
-
-A deployment should only be called complete after the production URL, homepage, analytics artifact, filters, critical UI path, desktop/mobile presentation, and deployment logs are verified.
-
-## Limitations
-
-- The dataset is synthetic, so findings demonstrate analytical behavior rather than claims about a real company.
-- Gross profit is not contribution margin or EBITDA; fulfillment, returns, customer acquisition, taxes, and overhead are out of scope.
-- Anomaly detection is univariate and monthly; it flags unusual movement but does not explain causes.
-- Seasonality is descriptive and does not establish causality.
-- Interactive filters re-aggregate derived financial facts in the browser; global anomaly/recommendation models are precomputed rather than rerun client-side.
-- Product growth profiles use the available 24-month synthetic history and should not be treated as long-run forecasts.
-
-## Future improvements
-
-- Add customer/cohort retention and repeat-purchase economics.
-- Add contribution-margin layers with shipping/service costs.
-- Add statistical discount-response modeling and elasticity experiments.
-- Add hierarchical anomaly attribution to product × channel × region combinations.
-- Add persisted filter URLs and downloadable executive reports.
-- Add automated visual regression and accessibility testing in CI.
-- Replace synthetic facts with a governed warehouse model when a real business dataset is available.
-
-## Portfolio value
-
-This project demonstrates more than visualization. It shows deterministic data generation, data contracts, defensive validation, commercial metric design, statistical anomaly detection, growth and concentration analysis, evidence-backed insight generation, typed frontend engineering, interaction design, test strategy, CI discipline, lineage, and production-oriented deployment architecture.
+The next meaningful product steps would be saved analyses/accounts, shareable read-only report links, customer/cohort retention, returns/refunds, contribution-margin layers, hierarchical anomaly attribution, and calibrated forecasting/elasticity models once real longitudinal datasets are available.
 
 ## License
 
