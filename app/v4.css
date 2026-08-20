@@ -1,0 +1,116 @@
+/* v4 — decision utility + restrained motion */
+
+/* Upload ergonomics */
+.upload-drop-zone { position: relative; border: 1px solid transparent; border-radius: 30px; padding: 26px; margin-left: -26px; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.upload-drop-zone--active { border-color: rgba(159,214,201,.75); background: rgba(159,214,201,.08); transform: scale(1.01); }
+.upload-hint { margin-top: 18px; display: grid; gap: 2px; color: rgba(247,250,249,.6); font-size: 13px; }
+.upload-hint small { color: rgba(247,250,249,.42); }
+.drop-overlay { position: absolute; inset: 0; z-index: 5; border-radius: 30px; display: grid; place-content: center; text-align: center; background: rgba(10,28,31,.94); border: 2px dashed #9fd6c9; color: #f7faf9; pointer-events: none; }
+.drop-overlay strong { font-size: 24px; letter-spacing: -.03em; }
+.drop-overlay span { margin-top: 7px; color: rgba(247,250,249,.65); }
+
+/* Comparison controls + drill-down */
+.change-wrap { display: grid; gap: 12px; }
+.change-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+.segmented button:disabled { opacity: .38; cursor: not-allowed; }
+.driver-row--action { align-items: center; }
+.driver-value { display: flex; align-items: center; gap: 10px; }
+.driver-value button, .inspect-button, .table-inspect { border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; padding: 5px 0; }
+.driver-value button:hover, .inspect-button:hover, .table-inspect:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Priority queue */
+.opportunity-layout { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(300px,.65fr); gap: 16px; align-items: stretch; }
+.opportunity-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.opportunity-card { --delay: 0ms; position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; animation: card-in .5s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--delay); }
+.opportunity-card::after { content: ''; position: absolute; width: 130px; height: 130px; right: -70px; top: -70px; border-radius: 50%; background: rgba(154,107,22,.07); }
+.opportunity-card--high { border-left: 5px solid var(--risk); }
+.opportunity-card--medium { border-left: 5px solid var(--warning); }
+.opportunity-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.opportunity-head > div { display: flex; align-items: center; gap: 10px; }
+.opportunity-head .eyebrow { margin: 0; }
+.opportunity-rank { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; background: #f0f3f5; color: #66707c; font-size: 10px; font-weight: 900; }
+.priority-chip { border-radius: 999px; padding: 5px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; font-weight: 900; }
+.priority-chip--high { background: var(--risk-soft); color: #843420; }
+.priority-chip--medium { background: #f6edd9; color: #805d18; }
+.opportunity-card h3 { margin: 18px 0 14px; font-size: 24px; letter-spacing: -.035em; }
+.opportunity-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.opportunity-metrics > div { background: #f8fafb; border-radius: 12px; padding: 11px; min-width: 0; }
+.opportunity-metrics span, .opportunity-metrics small { display: block; color: var(--muted); font-size: 10px; }
+.opportunity-metrics strong { display: block; margin: 4px 0 2px; font-size: 15px; overflow: hidden; text-overflow: ellipsis; }
+.opportunity-impact { min-height: 54px; color: #4b5662; font-size: 12px; line-height: 1.55; border-top: 1px solid #edf0f3; padding-top: 13px; margin-top: 14px; }
+.opportunity-impact strong { color: var(--text); }
+.bridge-card { background: #15222a; color: #eef5f3; border-radius: 22px; padding: 24px; }
+.bridge-card .eyebrow { color: #92cbbd; }
+.bridge-card h3 { margin: 5px 0 8px; font-size: 25px; letter-spacing: -.04em; }
+.bridge-card > p:not(.eyebrow):not(.bridge-note) { color: rgba(238,245,243,.62); font-size: 13px; }
+.bridge-rows { display: grid; gap: 14px; margin-top: 24px; }
+.bridge-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; font-size: 12px; }
+.bridge-label span { color: rgba(238,245,243,.62); }
+.bridge-track { height: 7px; display: block; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.08); }
+.bridge-track i { display: block; height: 100%; border-radius: inherit; background: #86cbb9; transform-origin: left; animation: bar-grow .7s cubic-bezier(.2,.7,.2,1) both; }
+.bridge-track--risk i { background: #d37a66; }
+.bridge-track--cost i { background: #bf9a62; }
+.bridge-track--profit i { background: #6cd6a5; }
+.bridge-note { margin: 22px 0 0; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.1); color: rgba(238,245,243,.48); font-size: 10px; line-height: 1.5; }
+
+/* Better chart interaction */
+.chart-wrap--interactive { position: relative; overflow: visible; }
+.trend-area { color: var(--accent); opacity: .85; }
+.trend-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: line-draw .9s cubic-bezier(.2,.75,.25,1) .08s forwards; }
+.chart-point circle:not(.chart-hit) { transform-box: fill-box; transform-origin: center; animation: point-pop .38s ease both; }
+.chart-point--active circle:not(.chart-hit) { r: 6; fill: var(--accent); }
+.chart-hit { cursor: crosshair; }
+.chart-crosshair { stroke: #8a96a3; stroke-width: 1; stroke-dasharray: 4 5; vector-effect: non-scaling-stroke; }
+.chart-tooltip { position: absolute; z-index: 4; min-width: 175px; transform: translate(-50%,-100%); background: #101a23; color: #f4f8f7; border-radius: 12px; padding: 11px 13px; box-shadow: 0 12px 34px rgba(16,26,35,.22); pointer-events: none; animation: tooltip-in .14s ease both; }
+.chart-tooltip span, .chart-tooltip small { display: block; color: rgba(244,248,247,.62); font-size: 10px; }
+.chart-tooltip strong { display: block; margin: 2px 0; font-size: 17px; }
+
+/* Scenario decision support */
+.scenario-presets { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 6px; }
+.scenario-presets > span { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; margin-right: 2px; }
+.scenario-presets button { border: 1px solid var(--line); background: #f8fafb; border-radius: 999px; padding: 7px 10px; color: #4c5762; cursor: pointer; font-size: 11px; font-weight: 750; }
+.scenario-presets button:hover { border-color: #9fc4bc; background: #edf6f3; color: var(--accent); }
+.break-even-row { background: rgba(146,203,189,.07); margin: 8px -10px 0; padding-left: 10px !important; padding-right: 10px !important; border-radius: 10px; }
+
+/* Sortable product economics */
+.table-summary { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 12px; padding: 0 0 10px; }
+.table-summary strong { color: var(--text); }
+.sort-button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; padding: 0; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; font-weight: inherit; }
+.sort-button span { color: #a5adb5; }
+.table-inspect { white-space: nowrap; }
+.table-more { margin-top: 12px; }
+
+/* Motion: useful feedback, not decoration */
+.button, .panel, .kpi-card, .recommendation, .driver-card, .change-summary, .quality-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease; }
+.upload-hero > div { animation: hero-in .6s cubic-bezier(.2,.75,.2,1) both; }
+.privacy-card { animation: hero-in .65s cubic-bezier(.2,.75,.2,1) .09s both; }
+.workflow-strip div { animation: card-in .45s ease both; }
+.workflow-strip div:nth-child(2) { animation-delay: .05s; } .workflow-strip div:nth-child(3) { animation-delay: .1s; } .workflow-strip div:nth-child(4) { animation-delay: .15s; }
+.hero-grid > div:first-child { animation: hero-in .55s cubic-bezier(.2,.75,.2,1) both; }
+.hero-status { animation: hero-in .6s cubic-bezier(.2,.75,.2,1) .08s both; }
+.kpi-card { animation: card-in .45s ease both; }
+.kpi-card:nth-child(2) { animation-delay: .04s; } .kpi-card:nth-child(3) { animation-delay: .08s; } .kpi-card:nth-child(4) { animation-delay: .12s; } .kpi-card:nth-child(5) { animation-delay: .16s; } .kpi-card:nth-child(6) { animation-delay: .2s; }
+.status-dot--ok { animation: status-pulse 2.6s ease-in-out infinite; }
+
+@media (hover:hover) {
+  .kpi-card:hover, .opportunity-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(18,24,32,.08); border-color: #c7d3d1; }
+  .panel:hover { box-shadow: 0 14px 34px rgba(18,24,32,.065); }
+}
+
+@keyframes hero-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes line-draw { to { stroke-dashoffset: 0; } }
+@keyframes point-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes tooltip-in { from { opacity: 0; transform: translate(-50%,-90%); } to { opacity: 1; transform: translate(-50%,-100%); } }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes status-pulse { 0%,100% { box-shadow: 0 0 0 4px rgba(65,164,116,.14); } 50% { box-shadow: 0 0 0 7px rgba(65,164,116,.05); } }
+
+@media (max-width: 1050px) { .opportunity-layout { grid-template-columns: 1fr; } .opportunity-list { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 700px) { .opportunity-list { grid-template-columns: 1fr; } .opportunity-metrics { grid-template-columns: 1fr 1fr; } .change-toolbar { justify-content: space-between; } .driver-value { align-items: flex-end; flex-direction: column; gap: 1px; } .table-summary { flex-direction: column; gap: 2px; } .upload-drop-zone { padding: 18px; margin-left: -18px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media print { .chart-tooltip, .inspect-button, .driver-value button, .scenario-presets, .table-more, .table-inspect { display: none !important; } .opportunity-layout { grid-template-columns: 1fr; } .opportunity-list { grid-template-columns: repeat(2,1fr); } }
