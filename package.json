@@ -1,6 +1,6 @@
 {
   "name": "day01-sales-analytics-command-center",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,14 +10,15 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:frontend": "node --experimental-strip-types --test tests/frontend.test.ts",
+    "test:frontend": "node --experimental-strip-types --test tests/frontend.test.ts tests/intelligence.test.ts tests/importer.test.ts",
     "test:e2e": "node tests/e2e-smoke.mjs",
     "quality": "npm run test:frontend && npm run lint && npm run format:check && npm run build"
   },
   "dependencies": {
     "next": "16.3.0",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "eslint": "9.22.0",

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './v3.css';
 
 export const metadata: Metadata = {
-  title: 'Sales Analytics Command Center | Day 01',
-  description: 'A portfolio-grade commercial analytics product for profitable growth, margin leakage, product economics and evidence-based decisions.',
+  title: 'Signal Sales Intelligence | Day 01',
+  description: 'Upload CSV or Excel sales data, validate it, explain what changed, forecast revenue, simulate decisions, and generate management intelligence.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
